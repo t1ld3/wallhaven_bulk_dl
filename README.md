@@ -1,7 +1,7 @@
 
 # wallhaven_bulk_dl.sh -- Version: 19.02.2021
 
-    This scripts lets you bulk download wallpapers from wallahaven.cc
+    This scripts lets you bulk download wallpapers from wallhaven.cc
     using its API to scrape the wallpapers links.
 
     options:

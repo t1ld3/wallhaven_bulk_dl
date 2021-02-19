@@ -18,7 +18,7 @@ walldir="$(xdg-user-dir PICTURES)/wallpapers/"
 PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
 help() {
     echo "$0 -- Version: 19.02.2021"
-    echo "This scripts lets you bulk download wallpapers from wallahaven.cc"
+    echo "This scripts lets you bulk download wallpapers from wallhaven.cc"
     echo "using its API to scrape the wallpapers links."
     echo ""
     echo "options:"
