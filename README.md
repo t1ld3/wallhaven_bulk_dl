@@ -14,3 +14,17 @@
     -o | --output-directory <dir> Change the default output directory.
     -f | --favorites              Choose tag from favorites.
     -h | --help                   Print this help.
+
+## Dependencies
+
+    jq
+    xdg-user-dirs
+    sxiv
+    wget
+
+## Installation
+
+### Arch Linux
+    $ sudo pacman -S -needed jq wget xdg-user-dirs sxiv wget
+    $ curl -sL https://raw.githubusercontent.com/t1ld3/wallhaven_bulk_dl/master/wallhaven_bulk_dl.sh -o ~/.local/bin/wallhaven_bulk-dl.sh
+    $ chmod +x ~/.local/bin/wallhaven_bulk_dl.sh
