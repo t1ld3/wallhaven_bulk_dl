@@ -1,37 +1,56 @@
 #!/bin/bash
+# wallhaven_bulk_dl.sh
+# Description :
+# This bash script is using Wallhaven.com's v1 API to search for and download
+# wallpapers based on the options provided.
+# Please note that the API is limited to 45 request per minutes.
+
+VERSION="13.03.2021"
+
 # possible values for options
-sortoptions="date_added,relevance,random,views,favorites,toplist"
-tagoptions="#fractal\n#digital art\n#science fiction\n#futuristic city\n#winter\n#lake\n#urban\n#vaporwave\n#retrowave\n#city lights\nspace"
+sortoptions="date_added,relevance,random,views,favorites"
 topRanges="1d,3d,1w,1M,3M,6M,1y"
-# getopt options to parse
-OPTIONS="q:s:r:p:o:fh"
-LONGOPTS="query:,sort:,range:,pages:,output-directory:,favorites,help"
 
-# default values for options
-search_query=""
-sorting="date_added"
-range="1M"
-maximum_pages=5
-tmpdir="$(mktemp -d)"
-walldir="$(xdg-user-dir PICTURES)/wallpapers/"
-
-PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
 help() {
-    echo "$0 -- Version: 19.02.2021"
-    echo "This scripts lets you bulk download wallpapers from wallhaven.cc"
-    echo "using its API to scrape the wallpapers links."
+    echo "$0 -- Version: $VERSION"
+    echo "This bash script is using wallhaven.cc's v1 API to search for and "
+    echo "download wallpapers based on the arguments provided."
+    echo "Please note that this API is limited to 45 request per minutes."
     echo ""
     echo "options:"
     echo "-q | --query <arg>            Search term."
     echo "-s | --sort  <sorting_option> Sorting used."
     echo "      $sortoptions"
-    echo "-r | --range <time_range>     Time range to use with '--sort toplist' only"
+    echo "-t | --toplist <time_range>   Toplist sorting offers time ranges :"
     echo "      $topRanges"
     echo "-p | --pages <number>         Number of pages to dowload."
     echo "-o | --output-directory <dir> Change the default output directory."
     echo "-f | --favorites              Choose tag from favorites."
     echo "-h | --help                   Print this help."
 }
+
+if [[ $# -lt 1 ]]; then
+    help
+    exit 1
+fi
+
+# Favorite tags file
+configdir="$HOME/.config/wallhaven_bulk_dl/"
+! [ -d $configdir ] && mkdir -p $configdir
+[ -f $configdir/tags ] && tags="$configdir/tags"
+
+# default values for options
+search_query=""
+sorting="date_added"
+range="1M"
+pages=5
+tmpdir="$(mktemp -d)"
+walldir="$(xdg-user-dir PICTURES)/wallpapers/"
+
+# getopt options to parse
+OPTIONS="q:s:t:p:o:fh"
+LONGOPTS="query:,sort:,toplist:,pages:,output-directory:,favorites,help"
+PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
 
 if [[ ${PIPED_STATUS[0]} -ne 0 ]]; then
     exit 2
@@ -52,8 +71,9 @@ while true; do
             fi
             shift 2
             ;;
-        -r|--range)
+        -t|--toplist)
             if echo $topRanges| grep -w "$2" >/dev/null;  then
+                sorting="toplist"
                 range="$2"
             else
                 echo "Bad time range option : $2"
@@ -62,7 +82,7 @@ while true; do
             shift 2
             ;;
         -p|--pages)
-            maximum_pages=$2
+            pages=$2
             shift 2
             ;;
         -o|--output-directory)
@@ -70,7 +90,7 @@ while true; do
             shift 2
             ;;
         -f|--favorites)
-            search_query="$(echo -e $tagoptions| fzf| sed 's/ /+/g'|sed 's/#//')"
+            search_query="$(cat $tags| fzf| sed 's/ /+/g; s/#//')"
             shift
             ;;
         -h|--help)
@@ -87,28 +107,36 @@ while true; do
             ;;
     esac
 done
-if [[ $sorting = "toplist"  ]]; then
-    toprange="&topRange=$range"
-fi
-if [[ $maximum_pages -gt 45 ]]; then
-    echo "The Api blocks you if you do more than 45 request per minute"
-    exit 1
-fi
-# url
-url="https://wallhaven.cc/api/v1/search"
-# parameters
-search_query="?q=$search_query"
-min_res="&atleast=1920x1080"
-sorting="&sorting=$sorting"
 
-notify-send "Downloading $maximum_pages pages of 24 wallpapers!"
-for page in $(seq 1 $maximum_pages); do
-    echo "Downloading $page out of $maximum_pages pages."
-    api_request=$(curl -s "${url}${search_query}${min_res}${sorting}${toprange}&page=${page}")
-    parsed_urls="$(echo $api_request| jq '.'| grep -Eoh 'https://w\.wallhaven.cc/full/.*(jpg|png)')"
-    wget -q -nc $parsed_urls -P $tmpdir
+godspeed='Y'
+if [[ $pages -gt 45 ]]; then
+    echo "Warning : if you have godspeed internet you'll be blocked by the api."
+    echo "Do you want to continue ? [Y/n]: "
+    read godspeed
+    if [ $godspeed != 'y' -a $godspeed != 'Y' ]; then
+        exit 1
+    fi
+fi
+
+# API URL
+url="https://wallhaven.cc/api/v1/search"
+# PARAMETERS
+url+="?q=$search_query"
+url+="&atleast=1920x1080"
+url+="&sorting=$sorting"
+if [[ $sorting = "toplist"  ]]; then
+    url+="&topRange=$range"
+fi
+
+for page in $(seq 1 $pages); do
+    notify-send "Downloading $page out of $pages pages."
+    api_request=$(curl -s "${url}&page=${page}") # json formatted output
+    parsed_urls=$(echo $api_request| jq '.data[] | .path' | tr -d '"')
+    wget -nv -nc $parsed_urls -P $tmpdir
 done
+
 notify-send "Download Finished !"
-sxiv -t $tmpdir/*
+
+sxiv -t $tmpdir/* 2>/dev/null
 mv $tmpdir/* $walldir
 rmdir $tmpdir
