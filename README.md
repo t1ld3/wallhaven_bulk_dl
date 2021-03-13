@@ -1,11 +1,11 @@
 
 # wallhaven_bulk_dl.sh -- Version: 13.03.2021
 
-##Description :
+## Description :
 
-    This bash script is using Wallhaven.com's v1 API to search for and download
-    wallpapers based on the arguments provided.
-    Please note that the API is limited to 45 request per minutes.
+This bash script is using Wallhaven.com's v1 API to search for and download
+wallpapers based on the arguments provided.
+Please note that the API is limited to 45 request per minutes.
 
 ## Dependencies
 
