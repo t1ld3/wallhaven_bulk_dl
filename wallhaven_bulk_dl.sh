@@ -36,16 +36,16 @@ fi
 
 # Favorite tags file
 configdir="$HOME/.config/wallhaven_bulk_dl/"
-! [ -d $configdir ] && mkdir -p $configdir
-[ -f $configdir/tags ] && tags="$configdir/tags"
+! [ -d "$configdir" ] && mkdir -p "$configdir"
+[ -f "$configdir/tags" ] && tags="$configdir/tags"
+tmpdir="$(mktemp -d)"
+walldir="$(xdg-user-dir PICTURES)/wallpapers/"
 
 # default values for options
 search_query=""
 sorting="date_added"
 range="1M"
 pages=5
-tmpdir="$(mktemp -d)"
-walldir="$(xdg-user-dir PICTURES)/wallpapers/"
 
 # getopt options to parse
 OPTIONS="q:s:t:p:o:fh"
@@ -112,8 +112,8 @@ godspeed='Y'
 if [[ $pages -gt 45 ]]; then
     echo "Warning : if you have godspeed internet you'll be blocked by the api."
     echo "Do you want to continue ? [Y/n]: "
-    read godspeed
-    if [ $godspeed != 'y' -a $godspeed != 'Y' ]; then
+    read -r godspeed
+    if [ "$godspeed" != 'y' ] && [ "$godspeed" != 'Y' ]; then
         exit 1
     fi
 fi
@@ -128,7 +128,7 @@ if [[ $sorting = "toplist"  ]]; then
     url+="&topRange=$range"
 fi
 
-for page in $(seq 1 $pages); do
+for page in $(seq 1 "$pages" ); do
     notify-send "Downloading $page out of $pages pages."
     api_request=$(curl -s "${url}&page=${page}") # json formatted output
     parsed_urls=$(echo $api_request| jq '.data[] | .path' | tr -d '"')
@@ -137,6 +137,6 @@ done
 
 notify-send "Download Finished !"
 
-sxiv -t $tmpdir/* 2>/dev/null
-mv $tmpdir/* $walldir
-rmdir $tmpdir
+sxiv -t "$tmpdir"/* 2>/dev/null
+mv "$tmpdir"/* "$walldir"
+rmdir "$tmpdir"
