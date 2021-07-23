@@ -45,7 +45,7 @@ walldir="$(xdg-user-dir PICTURES)/wallpapers/"
 search_query=""
 sorting="date_added"
 range="1M"
-pages=5
+pages=1
 
 # getopt options to parse
 OPTIONS="q:s:t:p:o:fh"
@@ -108,12 +108,12 @@ while true; do
     esac
 done
 
-godspeed='Y'
+fast_internet='Y'
 if [[ $pages -gt 45 ]]; then
-    echo "Warning : if you have godspeed internet you'll be blocked by the api."
-    echo "Do you want to continue ? [Y/n]: "
-    read -r godspeed
-    if [ "$godspeed" != 'y' ] && [ "$godspeed" != 'Y' ]; then
+    echo -en "\x1b[38;5;9m[Warning]\x1b[0m : "
+    echo "if you have really fast internet you'll be blocked by the api."
+    read -p "Do you want to continue ? [Y/n]: " -r fast_internet
+    if [ "$fast_internet" != 'y' ] && [ "$fast_internet" != 'Y' ]; then
         exit 1
     fi
 fi
